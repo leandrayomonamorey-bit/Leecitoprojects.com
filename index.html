@@ -34,7 +34,7 @@ export default function App() {
     "https://rebrand.ly/secure-check",
   ];
 
-  // Función genérica para llamar a Gemini con Re-intento
+  // Función genérica para llamar a Gemini con Re-intento y Exponential Backoff
   const callGemini = async (prompt, systemInstruction) => {
     let delay = 1000;
     for (let i = 0; i < 5; i++) {
@@ -47,8 +47,13 @@ export default function App() {
             systemInstruction: { parts: [{ text: systemInstruction }] }
           })
         });
+
+        if (!response.ok) throw new Error('Network response was not ok');
+
         const data = await response.json();
-        return data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) return text;
+        throw new Error('No content in response');
       } catch (error) {
         if (i === 4) throw error;
         await new Promise(r => setTimeout(r, delay));
@@ -71,8 +76,9 @@ export default function App() {
   };
 
   const generateHardwareReport = async () => {
-    if (!userSpecs.trim()) return;
+    if (!userSpecs.trim() || isGenerating) return;
     setIsGenerating(true);
+    setAiResponse("");
     try {
       const result = await callGemini(
         `Analiza este hardware: ${userSpecs}`,
@@ -80,14 +86,14 @@ export default function App() {
       );
       setAiResponse(result);
     } catch (e) {
-      setAiResponse("Error al conectar con el servidor IA.");
+      setAiResponse("Lo sentimos, el servidor de optimización no responde en este momento. Por favor, verifica tu conexión o intenta más tarde.");
     } finally {
       setIsGenerating(false);
     }
   };
 
   const generatePowerShellScript = async () => {
-    if (!scriptPurpose.trim()) return;
+    if (!scriptPurpose.trim() || isGeneratingScript) return;
     setIsGeneratingScript(true);
     try {
       const result = await callGemini(
@@ -96,39 +102,44 @@ export default function App() {
       );
       setGeneratedScript(result);
     } catch (e) {
-      setGeneratedScript("# Error al generar el script.");
+      setGeneratedScript("# Error: No se pudo generar el script en este momento.");
     } finally {
       setIsGeneratingScript(false);
     }
   };
 
   const handleChat = async () => {
-    if (!chatInput.trim()) return;
+    if (!chatInput.trim() || isChatting) return;
     const userMsg = { role: 'user', text: chatInput };
     setChatHistory(prev => [...prev, userMsg]);
+    const currentInput = chatInput;
     setChatInput("");
     setIsChatting(true);
     try {
       const result = await callGemini(
-        chatInput,
+        currentInput,
         "Eres el asistente de soporte de Leecito Projects. Ayuda con problemas de Windows, errores de drivers o dudas sobre ISOs personalizadas."
       );
       setChatHistory(prev => [...prev, { role: 'ai', text: result }]);
     } catch (e) {
-      setChatHistory(prev => [...prev, { role: 'ai', text: "Error de conexión." }]);
+      setChatHistory(prev => [...prev, { role: 'ai', text: "Error de conexión. El asistente no pudo procesar tu mensaje." }]);
     } finally {
       setIsChatting(false);
     }
   };
 
   const copyToClipboard = (text) => {
-    const el = document.createElement('textarea');
-    el.value = text;
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
-    alert("¡Copiado al portapapeles!");
+    try {
+      const el = document.createElement('textarea');
+      el.value = text;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      alert("¡Copiado al portapapeles!");
+    } catch (err) {
+      console.error('Failed to copy', err);
+    }
   };
 
   return (
@@ -219,7 +230,7 @@ export default function App() {
               />
               <button 
                 onClick={generateHardwareReport}
-                disabled={isGenerating}
+                disabled={isGenerating || !userSpecs.trim()}
                 className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
               >
                 {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
@@ -227,6 +238,9 @@ export default function App() {
               </button>
               {aiResponse && (
                 <div className="mt-6 p-4 bg-black/60 border border-indigo-500/30 rounded-xl text-xs leading-relaxed italic animate-in slide-in-from-bottom-2">
+                  <div className="flex items-center gap-2 mb-2 text-indigo-400">
+                    <AlertTriangle className="w-3 h-3" /> Reporte de Optimización
+                  </div>
                   {aiResponse}
                 </div>
               )}
@@ -246,7 +260,7 @@ export default function App() {
               />
               <button 
                 onClick={generatePowerShellScript}
-                disabled={isGeneratingScript}
+                disabled={isGeneratingScript || !scriptPurpose.trim()}
                 className="w-full py-3 bg-green-600 hover:bg-green-500 rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
               >
                 {isGeneratingScript ? <Loader2 className="w-4 h-4 animate-spin" /> : <Terminal className="w-4 h-4" />}
@@ -299,13 +313,14 @@ export default function App() {
                   type="text" 
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleChat()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleChat()}
                   placeholder="Describe tu error o duda técnica..."
                   className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 text-xs outline-none focus:border-blue-500"
                 />
                 <button 
                   onClick={handleChat}
-                  className="p-3 bg-blue-600 rounded-xl text-white hover:bg-blue-500"
+                  disabled={isChatting || !chatInput.trim()}
+                  className="p-3 bg-blue-600 rounded-xl text-white hover:bg-blue-500 disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                 </button>
