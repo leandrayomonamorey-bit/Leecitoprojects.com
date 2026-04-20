@@ -1,0 +1,165 @@
+import React, { useState, useEffect } from 'react';
+import { Download, Zap, Shield, Monitor, ChevronRight, Menu, X, Cpu, HardDrive, Terminal, Code, Github, Twitter, AlertTriangle, ExternalLink } from 'lucide-react';
+
+export default function App() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [downloadAttempts, setDownloadAttempts] = useState(0);
+  const [showNotification, setShowNotification] = useState(false);
+
+  // URLs de "sitios desconocidos" para los primeros 49 clics
+  const redirectUrls = [
+    "https://rebrand.ly/promo-web-shady",
+    "https://bit.ly/random-secure-check",
+    "https://archive.org/details/software",
+    "https://linktr.ee/leecitoprojects_fake",
+    "https://www.google.com/search?q=como+instalar+windows+12+original",
+    "https://caniuse.com/",
+  ];
+
+  const handleWin12Download = () => {
+    const nextCount = downloadAttempts + 1;
+    setDownloadAttempts(nextCount);
+
+    if (nextCount < 50) {
+      // Redirección aleatoria
+      const randomIndex = Math.floor(Math.random() * redirectUrls.length);
+      window.open(redirectUrls[randomIndex], '_blank');
+      
+      // Mostrar notificación visual
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 2000);
+    } else {
+      // Intento 50: Descarga definitiva
+      const finalLink = document.createElement('a');
+      finalLink.href = 'https://tu-servidor-de-descargas.com/Win12_Leecito_Edition.iso'; 
+      finalLink.download = 'Win12_Leecito_Edition.iso';
+      document.body.appendChild(finalLink);
+      finalLink.click();
+      document.body.removeChild(finalLink);
+      
+      setDownloadAttempts(0); // Reiniciar después de ganar
+      alert("¡SISTEMA DESBLOQUEADO! La descarga de Windows 12 ha comenzado.");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#020617] text-slate-300 font-sans">
+      {/* Notificación de clic */}
+      {showNotification && (
+        <div className="fixed top-20 right-5 z-[60] bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg animate-bounce border border-white/20">
+          Enlace verificado... Intenta de nuevo ({downloadAttempts}/50)
+        </div>
+      )}
+
+      {/* Navbar */}
+      <nav className="fixed w-full z-50 bg-slate-950/90 backdrop-blur-md border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-blue-600 rounded-lg">
+              <Terminal className="h-5 w-5 text-white" />
+            </div>
+            <span className="text-lg font-bold text-white uppercase tracking-tighter">Leecito Projects</span>
+          </div>
+          
+          <div className="hidden md:flex gap-8 text-sm font-medium">
+            <a href="#" className="hover:text-blue-400">Inicio</a>
+            <a href="#proyectos" className="hover:text-blue-400">Proyectos</a>
+            <a href="#" className="text-blue-500 font-bold">leecitoprojects.com</a>
+          </div>
+
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden">
+            {isMenuOpen ? <X /> : <Menu />}
+          </button>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <header className="pt-32 pb-20 px-6 text-center">
+        <div className="inline-block px-4 py-1.5 mb-6 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest">
+          Sistemas Operativos de Nueva Generación
+        </div>
+        <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
+          El Futuro del <br /> 
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-400">Rendimiento PC</span>
+        </h1>
+        <p className="max-w-2xl mx-auto text-lg text-slate-400 mb-10">
+          Optimizamos cada proceso para que tu hardware dé el 100%. Bienvenido a la web oficial de <strong>Leecito Projects</strong>.
+        </p>
+      </header>
+
+      {/* Download Section */}
+      <main id="proyectos" className="max-w-7xl mx-auto px-6 pb-32">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          
+          {/* Card Windows 12 (El especial con truco) */}
+          <div className="lg:col-span-2 bg-gradient-to-br from-slate-900 to-slate-950 border border-blue-500/30 rounded-3xl p-8 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4">
+              <div className="bg-blue-600 text-[10px] font-black px-3 py-1 rounded-full text-white animate-pulse">
+                ESTRENO EXCLUSIVO
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-8 items-center">
+              <div className="w-full md:w-1/3 flex flex-col items-center justify-center">
+                <div className="w-32 h-32 bg-blue-600/20 rounded-full flex items-center justify-center mb-4 border border-blue-500/50">
+                  <Monitor className="h-16 w-16 text-blue-400" />
+                </div>
+                <div className="text-center">
+                  <span className="text-xs font-mono text-slate-500">Build: 2026.04.LCP</span>
+                </div>
+              </div>
+
+              <div className="w-full md:w-2/3">
+                <h2 className="text-4xl font-black text-white mb-4">Windows 12 LeecitoOS</h2>
+                <p className="text-slate-400 mb-6">
+                  Nuestra obra maestra. Basado en el kernel más reciente, despojado de toda telemetría de Microsoft y optimizado para gaming competitivo y edición profesional.
+                </p>
+                
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 text-center">
+                    <p className="text-xs text-slate-500">ISO Size</p>
+                    <p className="text-sm font-bold text-white">3.1 GB</p>
+                  </div>
+                  <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 text-center">
+                    <p className="text-xs text-slate-500">Min RAM</p>
+                    <p className="text-sm font-bold text-white">2 GB</p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={handleWin12Download}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-bold text-xl flex items-center justify-center gap-3 transition-all shadow-[0_10px_30px_-10px_rgba(37,99,235,0.5)]"
+                >
+                  <Download className="h-6 w-6" />
+                  DESCARGAR AHORA
+                </button>
+                <p className="mt-4 text-[10px] text-center text-slate-600 uppercase tracking-widest font-bold">
+                   Requiere Verificación de Seguridad Nivel 50
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card Secundaria */}
+          <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 flex flex-col">
+            <Terminal className="h-10 w-10 text-slate-500 mb-6" />
+            <h3 className="text-2xl font-bold text-white mb-4">Debloat Script</h3>
+            <p className="text-slate-400 text-sm mb-8 flex-1">
+              Script automático para limpiar cualquier instalación de Windows 10/11 en segundos.
+            </p>
+            <button className="w-full py-3 border border-slate-700 rounded-xl text-slate-400 font-bold hover:bg-slate-800 transition-all">
+              Próximamente
+            </button>
+          </div>
+
+        </div>
+      </main>
+
+      <footer className="py-12 border-t border-white/5 text-center">
+        <p className="text-xs text-slate-600 font-mono tracking-tighter">
+          HOSTED AT: LEECITOPROJECTS.COM // NO ASOCIADO CON MICROSOFT CORPORATION
+        </p>
+      </footer>
+    </div>
+  );
+}
